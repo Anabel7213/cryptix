@@ -29,7 +29,7 @@ export default function Home() {
     <div className="pt-4 px-4 justify-end flex items-end w-full">
     <UserButton />
     </div>
-      <div className="flex justify-center flex-col items-center md:mt-16 gap-20">
+      <div className="flex justify-center flex-col items-center mx-4 my-8 md:mt-16 gap-20">
         <Switch items={items} active={active} setActive={setActive} />
         {active === 0 ? (
           <div className="justify-center flex flex-col items-center gap-8">

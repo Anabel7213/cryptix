@@ -37,6 +37,7 @@ export default function IdentificationCard({ setSelectedType }: any) {
       identifier: "Number",
       name: "Number",
       type: "string",
+      width: "w-full md:w-[280px]",
     },
     {
       identifier: "AdditionalInfo",
@@ -54,6 +55,7 @@ export default function IdentificationCard({ setSelectedType }: any) {
       identifier: "ExpiryDate",
       name: "Expiry Date",
       type: "date",
+      width: "w-full md:w-[280px]",
     },
     {
       identifier: "Address",
