@@ -31,7 +31,7 @@ export default function Create({ showButton = true, setSelectedType }: any) {
         <>
           <div
             onClick={() => setDisplay((prev) => !prev)}
-            className="hidden lg:absolute text-white cursor-pointer hover:bg-[#5e2ac5] transition-all w-fit bottom-24 left-1/2 -translate-x-1/2 bg-[#8656E4] shadow-[0px_6px_10px_0px_rgba(182,127,229,0.75)] p-4 rounded-full"
+            className="hidden invisible lg:visible lg:block absolute text-white cursor-pointer hover:bg-[#5e2ac5] transition-all w-fit bottom-24 left-1/2 -translate-x-1/2 bg-[#8656E4] shadow-[0px_6px_10px_0px_rgba(182,127,229,0.75)] p-4 rounded-full"
           >
             <Plus size={32} />
           </div>

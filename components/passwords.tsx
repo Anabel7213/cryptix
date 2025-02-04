@@ -215,7 +215,7 @@ export default function Passwords({
 
   useEffect(() => {
     if (user) {
-      const userItems = allItems.filter(item => item.user === user.id);
+      const userItems = allItems.filter((item) => item.user === user.id);
       setAllItemsLength(userItems.length);
       setAllItems(allItems);
     }

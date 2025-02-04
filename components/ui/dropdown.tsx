@@ -50,15 +50,18 @@ export default function Dropdown({
         ref={dropdownRef}
         className={`flex flex-col ${
           width || "md:w-[272px]"
-        } gap-2 relative items-center justify-center`}
+        } relative items-center justify-center`}
       >
         <Input
+          capitalize
+          onFocus={() => setIsOpen(true)}
           width={width}
           value={selected}
           inputName={name}
           type="text"
+          readOnly={true}
           placeholder="Select"
-          icon={<ChevronDown className={isOpen ? "rotate-180" : ""} />}
+          icon={<ChevronDown className={isOpen ? "rotate-180 border-[#1c1c1c]" : ""} />}
           onClick={(e) => {
             e.preventDefault();
             setIsOpen((prev) => !prev);
@@ -66,9 +69,11 @@ export default function Dropdown({
         />
         {isOpen && (
           <div
-            className={`flex absolute z-[1000] flex-col gap-2 p-4 rounded-standard bg-secondary w-full ${
+            className={`flex absolute z-[1000] flex-col border ${
+              selected ? "border-[#d5d5d5]" : "border-[#1c1c1c]"
+            } gap-1 p-4 rounded-lg bg-white w-full ${
               width || "md:w-[280px]"
-            } top-24`}
+            } top-[125%]`}
           >
             {data.map((item, index) => (
               <div
@@ -79,13 +84,13 @@ export default function Dropdown({
                   setSelected(item.name);
                   onSelect(item.name);
                 }}
-                className="flex items-center gap-2 hover:bg-[#e6e6e6] p-3 rounded-standard transition-all"
+                className="flex items-center gap-2 hover:bg-[#f9f9f9] p-2 rounded-lg transition-all"
               >
-                <div className="w-[20px] h-[20px] rounded-full border border-[#1C1C1C] bg-transparent flex justify-center items-center">
+                <div className="w-[16px] h-[16px] rounded-lg border border-[#D5D5D5] flex justify-center items-center">
                   {selected === item.name ? (
                     <>
                       {
-                        <div className="w-[8px] h-[8px] rounded-full bg-[#1C1C1C]"></div>
+                        <div className="w-[8px] h-[8px] rounded-lg bg-[#1c1c1c]"></div>
                       }
                     </>
                   ) : null}

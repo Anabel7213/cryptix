@@ -12,6 +12,7 @@ interface Input {
   type: string;
   capitalize?: boolean;
   value?: any;
+  readOnly?: boolean;
   placeholder?: string;
   icon?: ReactElement;
   width?: string;
@@ -44,6 +45,7 @@ export default function Input({
   type,
   onFocus,
   onBlur,
+  readOnly,
   placeholder,
   width = "w-[272px]",
 }: Input) {
@@ -75,6 +77,7 @@ export default function Input({
           }`}
         >
           <input
+            readOnly={readOnly}
             style={style}
             onBlurCapture={onBlurCapture}
             onClick={() => setFocus(true)}
