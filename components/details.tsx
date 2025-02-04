@@ -1,12 +1,13 @@
 import { handleDecryption } from "@/decrypt";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Input from "./ui/input";
-import { Copy, Eye, X } from "lucide-react";
+import { Copy, Eye } from "lucide-react";
 import toast from "react-hot-toast";
-import Icon from "./ui/icon";
 import { doc, updateDoc } from "firebase/firestore";
 import { db } from "@/firebaseConfig";
 import Link from "next/link";
+
+import { AlertDialog, AlertDialogContent } from "@/components/ui/alert-dialog";
 
 interface CardDetails {
   isOpen: boolean;
@@ -112,93 +113,96 @@ export default function CardDetails({ isOpen, setIsOpen, data }: CardDetails) {
   };
 
   const formFields = formFieldsByType[data?.Type] || [];
+  //handle click outside to close the popup
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    function handleClickOutside(e: any) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setIsOpen(false);
+      }
+    }
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
   return (
     <>
-      {isOpen && (
-        <div className="fixed inset-0 items-center justify-center flex backdrop-blur-xl">
-          <div className="flex flex-col gap-4 justify-end">
-            <div
-              onClick={() => setIsOpen(false)}
-              className="self-end text-border hover:text-white"
-            >
-              <Icon icon={<X />} />
-            </div>
-            <div className="flex flex-col md:grid md:grid-cols-2 gap-2">
-              {formFields.map((field, index) => (
-                <div key={index} className="flex items-center">
-                  <Input
-                    onBlurCapture={() => handleUpdate(field.name)}
-                    onChange={(e) => handleInputChange(e, field.name)}
-                    width={`w-full md:w-[${Math.max(
-                      324,
-                      (decryptedFields[field.name]?.length || 0) * 10
-                    )}px]`}
-                    showSecondaryIcon
-                    secondaryIcon={
-                      field.name !== "Additional Info" &&
-                      field.name !== "Service" &&
-                      field.name !== "Expiration" &&
-                      field.name !== "Issue Date" &&
-                      field.name !== "Expiry Date" ? (
-                        <Copy />
-                      ) : undefined
-                    }
-                    onSecondaryIconClick={() => {
-                      const valueToCopy = isVisible[field.name]
-                        ? decryptedFields[field.name]
-                        : editData[field.name];
-                      navigator.clipboard.writeText(valueToCopy || "");
-                      toast.success("Copied to Clipboard");
-                    }}
-                    icon={field.private ? <Eye /> : undefined}
-                    onClick={() =>
-                      field.private && toggleVisibility(field.name)
-                    }
-                    type={isVisible[field.name] ? "text" : field.type}
-                    value={
-                      isVisible[field.name]
-                        ? decryptedFields[field.name] || ""
-                        : editData[field.name] || ""
-                    }
-                    inputName={field.name}
-                    onFocus={() =>
-                      setIsEditing((prev) => ({
-                        ...prev,
-                        [field.name]: true,
-                      }))
-                    }
-                    onBlur={() =>
-                      setIsEditing((prev) => ({
-                        ...prev,
-                        [field.name]: false,
-                      }))
-                    }
-                  />
-                </div>
-              ))}
-              {data.files && data.files.length > 0 && (
-                <div className="flex flex-col gap-2">
-                  {data.files.map(
-                    (file: { name: string; url: string }, index: number) => (
-                      <Link
-                        key={index}
-                        href={file.url}
-                        target="_blank"
-                        download={file.name}
-                        rel="noopener noreferrer"
-                        className="text-[#8656E4] hover:underline"
-                      >
-                        Download {file.name}
-                      </Link>
-                    )
-                  )}
-                </div>
-              )}
-            </div>
+      <AlertDialog open={isOpen}>
+        <AlertDialogContent ref={ref}>
+          <div className="flex flex-col md:grid md:grid-cols-2 gap-2">
+            {formFields.map((field, index) => (
+              <div key={index} className="flex items-center">
+                <Input
+                  onBlurCapture={() => handleUpdate(field.name)}
+                  onChange={(e) => handleInputChange(e, field.name)}
+                  width={`w-full md:w-[${Math.max(
+                    324,
+                    (decryptedFields[field.name]?.length || 0) * 10
+                  )}px]`}
+                  showSecondaryIcon
+                  secondaryIcon={
+                    field.name !== "Additional Info" &&
+                    field.name !== "Service" &&
+                    field.name !== "Expiration" &&
+                    field.name !== "Issue Date" &&
+                    field.name !== "Expiry Date" ? (
+                      <Copy />
+                    ) : undefined
+                  }
+                  onSecondaryIconClick={() => {
+                    const valueToCopy = isVisible[field.name]
+                      ? decryptedFields[field.name]
+                      : editData[field.name];
+                    navigator.clipboard.writeText(valueToCopy || "");
+                    toast.success("Copied to Clipboard");
+                  }}
+                  icon={field.private ? <Eye /> : undefined}
+                  onClick={() => field.private && toggleVisibility(field.name)}
+                  type={isVisible[field.name] ? "text" : field.type}
+                  value={
+                    isVisible[field.name]
+                      ? decryptedFields[field.name] || ""
+                      : editData[field.name] || ""
+                  }
+                  inputName={field.name}
+                  onFocus={() =>
+                    setIsEditing((prev) => ({
+                      ...prev,
+                      [field.name]: true,
+                    }))
+                  }
+                  onBlur={() =>
+                    setIsEditing((prev) => ({
+                      ...prev,
+                      [field.name]: false,
+                    }))
+                  }
+                />
+              </div>
+            ))}
+            {data?.files && data.files.length > 0 && (
+              <div className="flex flex-col gap-2">
+                {data.files.map(
+                  (file: { name: string; url: string }, index: number) => (
+                    <Link
+                      key={index}
+                      href={file.url}
+                      target="_blank"
+                      download={file.name}
+                      rel="noopener noreferrer"
+                      className="text-[#8656E4] hover:underline"
+                    >
+                      Download {file.name}
+                    </Link>
+                  )
+                )}
+              </div>
+            )}
           </div>
-        </div>
-      )}
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

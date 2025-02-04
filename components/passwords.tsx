@@ -81,17 +81,16 @@ interface PasswordsProps {
   setAllItemsLength: (length: number) => void;
   setAllItems: (items: (Login | Card | ID)[]) => void;
   searchResult: (Login | Card | ID)[];
-  exportToCSV: () => void;
 }
 
 export default function Passwords({
   setAllItemsLength,
   setAllItems,
   searchResult,
-  exportToCSV,
 }: PasswordsProps) {
   const [categories, setCategories] = useState<Category[]>([]);
   const { user } = useUser();
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     if (typeof window !== "undefined") {
@@ -144,8 +143,8 @@ export default function Passwords({
             ...(doc.data() as Login),
             id: doc.id,
           }));
-          console.log("Fetched Logins:", login);
           setLogin(login);
+          setIsLoading(false);
         } catch (err) {
           console.log("Error fetching a credential type" + err);
         }
@@ -163,8 +162,8 @@ export default function Passwords({
             ...(doc.data() as Card),
             id: doc.id,
           }));
-          console.log("Fetched Cards:", cards);
           setCards(cards);
+          setIsLoading(false);
         } catch (err) {
           console.error("Error fetching a bank card type: " + err);
         }
@@ -182,8 +181,8 @@ export default function Passwords({
             ...(doc.data() as ID),
             id: doc.id,
           }));
-          console.log("Fetched IDs:", idCards);
           setIdCards(idCards);
+          setIsLoading(false);
         } catch (err) {
           toast.error("Error fetching an id card type" + err);
         }
@@ -221,90 +220,95 @@ export default function Passwords({
 
   return (
     <>
-      <div className="flex flex-col md:justify-center w-full md:max-w-[1200px]">
-        <div className="flex gap-6 w-full overflow-x-scroll mx-2">
-          {categories
-            ?.filter(
-              (category) =>
-                category.user === user?.id || category.name === "Documents"
-            )
-            .map((category) => (
-              <div key={category.id} className="flex flex-col gap-2">
-                <div className="flex shrink-0 min-w-[180px] items-center justify-between gap-4">
-                  <div className="flex items-center gap-4 justify-between w-full">
-                    <h1 className="capitalize font-medium px-2 py-1 mb-1 rounded-md bg-[#f6f6f6] text-sm whitespace-nowrap">
-                      {category.name}
-                    </h1>
-                    <span className="text-[#758393]">
-                      {
-                        itemsToDisplay.filter(
-                          (item) =>
-                            item &&
-                            item.Category === category.name &&
-                            item.user === user?.id
-                        ).length
-                      }
-                    </span>
-                  </div>
-                </div>
-                {itemsToDisplay
-                  .filter((item) => {
-                    const matchesCategory =
-                      item?.Category === category.name &&
-                      item?.user === user?.id;
-                    // console.log(
-                    //   `Item: ${item?.Service}, Category: ${item?.Category}, Matches: ${matchesCategory}`
-                    // );
-                    return matchesCategory;
-                  })
-                  .map((item) => (
-                    <div
-                      key={item.id}
-                      onClick={() => {
-                        setSelectedItem(item);
-                        setIsOpen(true);
-                      }}
-                      className="truncate flex group hover:border-[#1C1C1C] transition-all cursor-pointer items-center justify-between border border-[#D5D5D5] rounded-lg py-2 px-4"
-                    >
-                      <div className="capitalize">{item?.Service}</div>
-                      <AlertDialog>
-                        <AlertDialogTrigger>
-                          <Icon danger size={14} icon={<Trash />} />
-                        </AlertDialogTrigger>
-                        <AlertDialogContent>
-                          <AlertDialogHeader>
-                            <AlertDialogTitle>
-                              Are you absolutely sure?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription>
-                              This action cannot be undone. This will
-                              permanently delete your record.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel>Cancel</AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                const collectionName =
-                                  item?.Type === "Card"
-                                    ? "Card"
-                                    : item?.Type === "ID"
-                                    ? "ID"
-                                    : "Login";
-                                deleteItem(item.id, collectionName);
-                              }}
-                            >
-                              Continue
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
+      <div className="w-full flex flex-col md:justify-center lg:max-w-[1200px]">
+        {!isLoading ? (
+          <div className="flex flex-col gap-4 lg:flex-row lg:gap-8 w-full lg:overflow-x-scroll">
+            {categories
+              ?.filter(
+                (category) =>
+                  category.user === user?.id || category.name === "Documents"
+              )
+              .map((category) => (
+                <div key={category.id} className="flex flex-col gap-2">
+                  <div className="flex shrink-0 min-w-[180px] items-center justify-between gap-4">
+                    <div className="flex items-center gap-4 justify-between w-full">
+                      <h1 className="capitalize font-medium px-2 py-1 mb-1 rounded-md bg-[#f6f6f6] lg:text-sm whitespace-nowrap">
+                        {category.name}
+                      </h1>
+                      <span className="text-[#758393]">
+                        {
+                          itemsToDisplay.filter(
+                            (item) =>
+                              item &&
+                              item.Category === category.name &&
+                              item.user === user?.id
+                          ).length
+                        }
+                      </span>
                     </div>
-                  ))}
-              </div>
-            ))}
-        </div>
+                  </div>
+                  {itemsToDisplay
+                    .filter((item) => {
+                      const matchesCategory =
+                        item?.Category === category.name &&
+                        item?.user === user?.id;
+                      return matchesCategory;
+                    })
+                    .map((item) => (
+                      <div
+                        key={item.id}
+                        className="truncate flex group hover:border-[#1C1C1C] transition-all cursor-pointer items-center justify-between border border-[#D5D5D5] rounded-lg pr-4"
+                      >
+                        <div
+                          onClick={() => {
+                            setSelectedItem(item);
+                            setIsOpen(true);
+                          }}
+                          className="capitalize pl-4 mr-4 w-full py-2"
+                        >
+                          {item?.Service}
+                        </div>
+                        <AlertDialog>
+                          <AlertDialogTrigger>
+                            <Icon danger size={14} icon={<Trash />} />
+                          </AlertDialogTrigger>
+                          <AlertDialogContent>
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>
+                                Are you absolutely sure?
+                              </AlertDialogTitle>
+                              <AlertDialogDescription>
+                                This action cannot be undone. This will
+                                permanently delete your record.
+                              </AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel>Cancel</AlertDialogCancel>
+                              <AlertDialogAction
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  const collectionName =
+                                    item?.Type === "Card"
+                                      ? "Card"
+                                      : item?.Type === "ID"
+                                      ? "ID"
+                                      : "Login";
+                                  deleteItem(item.id, collectionName);
+                                }}
+                              >
+                                Continue
+                              </AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    ))}
+                </div>
+              ))}
+          </div>
+        ) : (
+          <div className="m-4 lg:m-24 w-full lg:w-[1200px] animate-pulse h-[300px] text-[#758393] flex items-center justify-center"></div>
+        )}
       </div>
       <CardDetails setIsOpen={setIsOpen} isOpen={isOpen} data={selectedItem} />
     </>

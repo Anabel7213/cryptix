@@ -12,6 +12,12 @@ import GeneratePassword from "@/passwordGenerator";
 import { getDownloadURL, ref, uploadBytes } from "firebase/storage";
 import { useUser } from "@clerk/nextjs";
 
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogHeader,
+} from "@/components/ui/alert-dialog";
+
 interface Category {
   user: string;
   id: string;
@@ -162,110 +168,104 @@ export default function UnifiedForm({ selectedType, setSelectedType }: any) {
   );
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div
-        className={`bg-white rounded-3xl border border-[#D5D5D5] transition-all duration-300 ${
-          selectedType === "Login" ? "max-w-3xl" : "max-w-xl"
-        }`}
-      >
-        <div className="p-12 relative">
-          <form
-            onSubmit={handleSubmit}
-            className="h-[400px] overflow-scroll flex flex-col gap-4"
-          >
-            <div className="flex flex-col gap-4">
-              <div className="space-y-4">
-                {formFields.length > 0 ? (
-                  formFields.map((field, index) => (
-                    <div key={index}>
-                      {field.type === "dropdown" ? (
-                        <Dropdown
-                          width="w-full md:w-[400px]"
-                          data={userCategories}
-                          select={field.name === "Type" ? selectedType : ""}
-                          onSelect={(v: string) =>
-                            handleInputChange(field.name, v)
-                          }
-                          name={field.name}
+    <AlertDialog open={selectedType !== ""}>
+      <AlertDialogContent>
+        <form
+          onSubmit={handleSubmit}
+          className="h-[400px] overflow-scroll flex flex-col gap-4"
+        >
+          <div className="flex flex-col gap-4">
+            <div className="space-y-4">
+              {formFields.length > 0 ? (
+                formFields.map((field, index) => (
+                  <div key={index}>
+                    {field.type === "dropdown" ? (
+                      <Dropdown
+                        width="w-full"
+                        data={userCategories}
+                        select={field.name === "Type" ? selectedType : ""}
+                        onSelect={(v: string) =>
+                          handleInputChange(field.name, v)
+                        }
+                        name={field.name}
+                      />
+                    ) : field.type === "file" ? (
+                      <div
+                        onClick={() =>
+                          document.getElementById("file-upload")?.click()
+                        }
+                        className="group border border-dashed border-[#D5D5D5] h-[200px] bg-secondary rounded-standard text-[#758393] text-center flex flex-col gap-2 justify-center items-center"
+                      >
+                        <input
+                          type="file"
+                          id="file-upload"
+                          onChange={handleFileUpload}
+                          className="hidden"
                         />
-                      ) : field.type === "file" ? (
-                        <div
-                          onClick={() =>
-                            document.getElementById("file-upload")?.click()
-                          }
-                          className="group border border-dashed border-[#D5D5D5] h-[200px] bg-secondary rounded-standard text-[#758393] text-center flex flex-col gap-2 justify-center items-center"
-                        >
-                          <input
-                            type="file"
-                            id="file-upload"
-                            onChange={handleFileUpload}
-                            className="hidden"
+                        <div className="group-hover:text-[#1C1C1C] flex flex-col items-center gap-1 font-medium text-[#758393]">
+                          <Paperclip
+                            size={20}
+                            className="group-hover:text-[#1C1C1C1]"
                           />
-                          <div className="group-hover:text-[#1C1C1C] flex flex-col items-center gap-1 font-medium text-[#758393]">
-                            <Paperclip
-                              size={20}
-                              className="group-hover:text-[#1C1C1C1]"
-                            />
-                            {uploadedFileName || "Documents"}
-                          </div>
+                          {uploadedFileName || "Documents"}
                         </div>
-                      ) : (
-                        <Input
-                          showSecondaryIcon
-                          width="w-full md:w-[400px]"
-                          type={revealFields[field.name] ? "text" : field.type}
-                          inputName={field.name}
-                          value={
-                            field.name in sensitiveFields
-                              ? sensitiveFields[
-                                  field.name as keyof typeof sensitiveFields
-                                ]
-                              : (data as any)[field.name]
-                          }
-                          onChange={(e) =>
-                            handleInputChange(field.name, e.target.value)
-                          }
-                          icon={field.icon}
-                          secondaryIcon={field.secondaryIcon}
-                          onSecondaryIconClick={
-                            field.name === "Password"
-                              ? handleGeneratePassword
-                              : undefined
-                          }
-                          onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            setRevealFields((prev) => ({
-                              ...prev,
-                              [field.name]: !prev[field.name],
-                            }));
-                          }}
-                        />
-                      )}
-                    </div>
-                  ))
-                ) : (
-                  <p>Please select a valid type.</p>
-                )}
-              </div>
+                      </div>
+                    ) : (
+                      <Input
+                        showSecondaryIcon
+                        width="w-full"
+                        type={revealFields[field.name] ? "text" : field.type}
+                        inputName={field.name}
+                        value={
+                          field.name in sensitiveFields
+                            ? sensitiveFields[
+                                field.name as keyof typeof sensitiveFields
+                              ]
+                            : (data as any)[field.name]
+                        }
+                        onChange={(e) =>
+                          handleInputChange(field.name, e.target.value)
+                        }
+                        icon={field.icon}
+                        secondaryIcon={field.secondaryIcon}
+                        onSecondaryIconClick={
+                          field.name === "Password"
+                            ? handleGeneratePassword
+                            : undefined
+                        }
+                        onClick={(e: React.MouseEvent<HTMLButtonElement>) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          setRevealFields((prev) => ({
+                            ...prev,
+                            [field.name]: !prev[field.name],
+                          }));
+                        }}
+                      />
+                    )}
+                  </div>
+                ))
+              ) : (
+                <p>Please select a valid type.</p>
+              )}
             </div>
-            <div className="flex justify-between items-center gap-4 mt-4">
-              <button
-                onClick={() => setSelectedType("")}
-                className="text-[#758393] hover:text-[#1C1C1C] transition-all"
-              >
-                Cancel
-              </button>
-              <button
-                type="submit"
-                className={`px-8 font-medium py-3 ${"bg-[#8656E4] hover:bg-[#5e2ac5] text-white"} rounded-lg transition-colors w-fit`}
-              >
-                Save {selectedType}
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
+          </div>
+          <div className="flex justify-between items-center gap-4 mt-4">
+            <button
+              onClick={() => setSelectedType("")}
+              className="text-[#758393] hover:text-[#1C1C1C] transition-all"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              className={`px-8 font-medium py-3 ${"bg-[#8656E4] hover:bg-[#5e2ac5] text-white"} rounded-lg transition-colors w-fit`}
+            >
+              Save {selectedType}
+            </button>
+          </div>
+        </form>
+      </AlertDialogContent>
+    </AlertDialog>
   );
 }

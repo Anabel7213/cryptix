@@ -128,8 +128,8 @@ export default function Categories() {
 
   return (
     <>
-      <div className="flex flex-col w-full md:w-[700px]">
-        <div className="flex md:min-w-[300px] gap-2 pl-6 py-2 pr-2 justify-between rounded-lg bg-[#f6f6f6]">
+      <div className="flex w-full flex-col lg:w-[700px]">
+        <div className="flex w-full lg:min-w-[300px] gap-2 pl-6 py-2 pr-2 justify-between rounded-lg bg-[#f6f6f6]">
           <input
             className="bg-transparent outline-none capitalize w-full"
             type="text"
@@ -155,7 +155,7 @@ export default function Categories() {
           <>
             <div
               ref={categoryRef}
-              className="grid grid-cols-1 md:grid-cols-3 gap-3 mt-4"
+              className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 mt-4"
             >
               {[...categories]
                 .sort((a, b) => a.name.localeCompare(b.name))
@@ -168,7 +168,7 @@ export default function Categories() {
                   >
                     {editedId === category.id ? (
                       <input
-                        className="outline-none bg-transparent md:w-[148px]"
+                        className="outline-none bg-transparent lg:w-[148px]"
                         type="text"
                         value={editedText}
                         onChange={(e) => setEditedText(e.target.value)}

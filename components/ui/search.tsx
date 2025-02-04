@@ -26,7 +26,7 @@ export default function Search({ allItems, setSearchResult }: any) {
   };
 
   return (
-    <div className="flex md:min-w-[300px] gap-2 py-3 text-sm px-4 rounded-full bg-[#f6f6f6]">
+    <div className="flex w-full lg:min-w-[300px] gap-2 py-3 lg:py-2 lg:text-sm px-4 rounded-lg bg-[#f6f6f6]">
       <SearchIcon size={20} />
       <input
         className="bg-transparent outline-none"

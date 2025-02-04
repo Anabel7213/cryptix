@@ -10,7 +10,7 @@ import { useClerk } from "@clerk/nextjs";
 import { FileCode2, FolderUp, LogOut, Share2, X } from "lucide-react";
 import Icon from "./icon";
 import toast from "react-hot-toast";
-import React from "react";
+import React, { useEffect, useRef } from "react";
 
 export default function SettingsModal({
   trigger,
@@ -57,16 +57,27 @@ export default function SettingsModal({
     },
   ];
 
+  const ref = useRef<HTMLDivElement | null>(null);
+  useEffect(() => {
+    function handleClickOutside(e: any) {
+      if (ref.current && !ref.current.contains(e.target)) {
+        setModal(false);
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+
   return (
     <>
       <AlertDialog open={modal} onOpenChange={setModal}>
         <AlertDialogTrigger>{trigger}</AlertDialogTrigger>
-        <AlertDialogContent>
+        <AlertDialogContent ref={ref}>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex justify-between items-center">
-              Settings
-              <Icon size={20} icon={<X />} onClick={() => setModal(false)} />
-            </AlertDialogTitle>
+            <AlertDialogTitle>Settings</AlertDialogTitle>
             <AlertDialogDescription>
               {actions.map((item) => (
                 <div
