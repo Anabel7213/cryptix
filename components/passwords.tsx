@@ -1,185 +1,312 @@
-"use client"
+"use client";
 
-import { db } from "@/firebaseConfig"
-import { collection, getDocs } from "firebase/firestore"
-import { useEffect, useState } from "react"
-import Icon from "./ui/icon"
-import { Eye, Filter, MoreHorizontal, Plus, Search } from "lucide-react"
-import CardDetails from "./modals/details"
-import toast from "react-hot-toast"
-import { useUser } from "@clerk/nextjs"
+import { db } from "@/firebaseConfig";
+import {
+  collection,
+  getDocs,
+  deleteDoc,
+  doc,
+  query,
+  where,
+  onSnapshot,
+  addDoc,
+} from "firebase/firestore";
+import { useEffect, useState, useMemo } from "react";
+import { Trash } from "lucide-react";
+import CardDetails from "./details";
+import toast from "react-hot-toast";
+import { useUser } from "@clerk/nextjs";
+
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
+import Icon from "./ui/icon";
 
 interface Category {
-    user: string,
-    id: string
-    name: string
+  user: string;
+  id: string;
+  name: string;
 }
 
-interface CredentialsData {
-    user: string,
-    Type: string
-    Category: string
-    Email: string
-    Phone: string
-    Service: string
-    Username: string
+interface Login {
+  id: string;
+  user: string;
+  Type: string;
+  Category: string;
+  Service: string;
+  Username: string;
+  Email: string;
+  Phone: string;
+  password: Object;
+  recovery: Object;
 }
 
-interface Credentials {
-    id: string
-    data: CredentialsData
-    password: Object
-    recovery: Object
+interface Card {
+  id: string;
+  user: string;
+  Type: string;
+  Category: string;
+  Service: string;
+  CardNumber: string;
+  pin: Object;
+  cvv: Object;
+  AccountNumber: string;
+  RoutingNumber: string;
+  BillingAddress: string;
+  Expiration: string;
 }
 
-interface BankCardData {
-    user: string,
-    Type: string
-    Category: string
-    Service: string
-    Email: string
-    Phone: string
-    CardNumber: string
-    AccountNumber: string
-    BillingAddress: string
-    Expiration: string
-    RoutingNumber: string
+interface ID {
+  id: string;
+  user: string;
+  Type: string;
+  Category: string;
+  Service: string;
+  Number: string;
+  AdditionalInfo: string;
+  IssueDate: string;
+  ExpiryDate: string;
+  Address: string;
 }
 
-interface BankCards {
-    id: string
-    data: BankCardData
-    pin: Object
-    cvv: Object
-    password: Object
-    recovery: Object
+interface PasswordsProps {
+  setAllItemsLength: (length: number) => void;
+  setAllItems: (items: (Login | Card | ID)[]) => void;
+  searchResult: (Login | Card | ID)[];
+  exportToCSV: () => void;
 }
 
-interface IdCardData {
-    user: string,
-    Type: string,
-    Category: string
-    Service: string
-    Number: string
-    AdditionalInfo: string
-    IssueDate: string
-    ExpiryDate: string
-    Address: string
-}
+export default function Passwords({
+  setAllItemsLength,
+  setAllItems,
+  searchResult,
+  exportToCSV,
+}: PasswordsProps) {
+  const [categories, setCategories] = useState<Category[]>([]);
+  const { user } = useUser();
 
-interface IdCards {
-    id: string
-    data: IdCardData
-}
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      if (!user?.id) return;
 
-export default function Passwords() {
-    const [ categories, setCategories ] = useState<Category[]>([])
-    useEffect(() => {
-        const fetchCategories = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "categories"))
-                const categories = querySnapshot.docs.map(doc => ({
-                    ...doc.data() as Category,
-                    id: doc.id
-                }))
-                setCategories(categories)
-            } catch(err) {
-                console.error("Error fetching categories" + err)
-            }
+      const q = query(
+        collection(db, "categories"),
+        where("user", "==", user.id)
+      );
+
+      const unsubscribe = onSnapshot(q, async (snapshot) => {
+        let categoriesData = snapshot.docs.map((doc) => ({
+          ...(doc.data() as Category),
+          id: doc.id,
+        }));
+
+        const documentsCategoryExists = categoriesData.some(
+          (category) => category.name === "Documents"
+        );
+
+        if (!documentsCategoryExists) {
+          try {
+            const docRef = await addDoc(collection(db, "categories"), {
+              user: user.id,
+              name: "Documents",
+            });
+            categoriesData = [
+              { id: docRef.id, name: "Documents", user: user.id },
+              ...categoriesData,
+            ];
+          } catch (error) {
+            console.error("Error adding 'Documents' category:", error);
+          }
         }
-        fetchCategories()
-    }, [])
-    const [ credentials, setCredentials ] = useState<Credentials[]>([])
-    useEffect(() => {
-        const fetchCredentials = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "credentials"))
-                const credentials = querySnapshot.docs.map(doc => ({
-                    ...doc.data() as Credentials,
-                    id: doc.id
-                }))
-                setCredentials(credentials)
-            } catch(err) {
-                console.log("Error fetching a credential type" + err)
-            }
+
+        setCategories(categoriesData);
+      });
+
+      return () => unsubscribe();
+    }
+  }, [user?.id]);
+
+  const [login, setLogin] = useState<Login[]>([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const fetchCredentials = async () => {
+        try {
+          const querySnapshot = await getDocs(collection(db, "Login"));
+          const login = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as Login),
+            id: doc.id,
+          }));
+          console.log("Fetched Logins:", login);
+          setLogin(login);
+        } catch (err) {
+          console.log("Error fetching a credential type" + err);
         }
-        fetchCredentials()
-    }, [])
-    const [ bankCards, setBankCards ] = useState<BankCards[]>([])
-    useEffect(() => {
-        const fetchBankCard = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "bankCard"))
-                const bankCards = querySnapshot.docs.map(doc => ({
-                    ...doc.data() as BankCards,
-                    id: doc.id
-                }))
-                setBankCards(bankCards)
-            } catch(err) {
-                console.error("Error fetching a bank card type" + err)
-            }
+      };
+      fetchCredentials();
+    }
+  }, []);
+  const [cards, setCards] = useState<Card[]>([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const fetchBankCard = async () => {
+        try {
+          const querySnapshot = await getDocs(collection(db, "Card"));
+          const cards = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as Card),
+            id: doc.id,
+          }));
+          console.log("Fetched Cards:", cards);
+          setCards(cards);
+        } catch (err) {
+          console.error("Error fetching a bank card type: " + err);
         }
-        fetchBankCard()
-    }, [])
-    const [ idCards, setIdCards ] = useState<IdCards[]>([])
-    useEffect(() => {
-        const fetchIdCard = async () => {
-            try {
-                const querySnapshot = await getDocs(collection(db, "idCard"))
-                const idCards = querySnapshot.docs.map(doc => ({
-                    ...doc.data() as IdCards,
-                    id: doc.id
-                }))
-                setIdCards(idCards)
-            } catch(err) {
-                toast.error("Error fetching an id card type" + err)
-            }
+      };
+      fetchBankCard();
+    }
+  }, []);
+  const [idCards, setIdCards] = useState<ID[]>([]);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const fetchIdCard = async () => {
+        try {
+          const querySnapshot = await getDocs(collection(db, "ID"));
+          const idCards = querySnapshot.docs.map((doc) => ({
+            ...(doc.data() as ID),
+            id: doc.id,
+          }));
+          console.log("Fetched IDs:", idCards);
+          setIdCards(idCards);
+        } catch (err) {
+          toast.error("Error fetching an id card type" + err);
         }
-        fetchIdCard()
-    }, [])
-    const [ isOpen, setIsOpen ] = useState(false)
-    const [ selectedItem, setSelectedItem ] = useState<Credentials | BankCards | IdCards | null>(null)
-    const allItems = [...bankCards, ...idCards]; //calculate the items under "Documents"
-    const { user } = useUser()
-    return (
-        <>
-        <div className="flex flex-col md:justify-center w-full md:max-w-[1200px]">
-        <div className="flex items-center justify-between">
-        <Icon icon={<Search />} onClick={() => {}} />
-        <Icon icon={<Filter />} onClick={() => {}} />
-        </div>
-        {/* <button onClick={() => console.log(selectedItem)}>test</button> */}
-        <div className="border-b border-border my-3"></div>
-        <div className="flex gap-20 w-full overflow-x-scroll mx-2">
-        <>
-        {categories?.filter(category => category.user === user?.id).map((category) => (
-            <div key={category.id} className="flex flex-col gap-2">
-                <div className="flex shrink-0 min-w-[200px] items-center justify-between gap-4 hover:bg-secondary py-1 px-3 rounded-full">
-                    <div className="flex items-center gap-4">
-                        <h1 className="capitalize font-medium whitespace-nowrap">{category.name}</h1>
-                        <span>{credentials?.filter((credential) => credential?.data?.Category === category?.name).length || category.name === "Documents" && allItems?.filter(item => item.data?.user === user?.id).length || 0}</span>
-                    </div>
-                    <div className="flex items-center">
-                        <Icon icon={<MoreHorizontal />} onClick={() => {}} />
-                        <Icon icon={<Plus />} onClick={() => {}} />
-                    </div>
+      };
+      fetchIdCard();
+    }
+  }, []);
+
+  const [isOpen, setIsOpen] = useState(false);
+  const [selectedItem, setSelectedItem] = useState<Login | Card | ID | null>(
+    null
+  );
+  const allItems = useMemo(() => {
+    return [...cards, ...idCards, ...login];
+  }, [cards, idCards, login]);
+
+  const itemsToDisplay = searchResult.length > 0 ? searchResult : allItems;
+
+  const deleteItem = async (itemId: string, collectionName: string) => {
+    try {
+      const itemRef = doc(db, collectionName, itemId);
+      await deleteDoc(itemRef);
+      toast.success("Item deleted successfully!");
+      window.location.reload();
+    } catch (error: any) {
+      console.error("Error deleting item: ", error);
+      toast.error("Failed to delete item: " + error.message);
+    }
+  };
+
+  useEffect(() => {
+    setAllItemsLength(allItems.length);
+    setAllItems(allItems);
+  }, [setAllItems, allItems, setAllItemsLength]);
+
+  return (
+    <>
+      <div className="flex flex-col md:justify-center w-full md:max-w-[1200px]">
+        <div className="flex gap-6 w-full overflow-x-scroll mx-2">
+          {categories
+            ?.filter(
+              (category) =>
+                category.user === user?.id || category.name === "Documents"
+            )
+            .map((category) => (
+              <div key={category.id} className="flex flex-col gap-2">
+                <div className="flex shrink-0 min-w-[180px] items-center justify-between gap-4">
+                  <div className="flex items-center gap-4 justify-between w-full">
+                    <h1 className="capitalize font-medium px-2 py-1 mb-1 rounded-md bg-[#f6f6f6] text-sm whitespace-nowrap">
+                      {category.name}
+                    </h1>
+                    <span className="text-[#758393]">
+                      {
+                        itemsToDisplay.filter(
+                          (item) =>
+                            item &&
+                            item.Category === category.name &&
+                            item.user === user?.id
+                        ).length
+                      }
+                    </span>
+                  </div>
                 </div>
-                {/* <button onClick={() => console.log(allItems?.filter(item => item.data?.user === user?.id).length)}>test</button>  */}
-                {[...credentials, ...bankCards, ...idCards]
-                    .filter((item) => item.data.Category === category.name && item?.data?.user === user?.id)
-                    .map((item) => (
-                    <div key={item.id} onClick={() => {setSelectedItem(item); setIsOpen(true);}} className="flex group hover:shadow-xl cursor-pointer hover:bg-[#3a4461] min-h-[52px] items-center justify-between border border-border rounded-full p-[12px]">
-                        <div className="">{item.data.Service}</div>
-                        <div className="group-hover:block hidden"><Icon icon={<Eye />} onClick={() => {}} /></div>
+                {itemsToDisplay
+                  .filter((item) => {
+                    const matchesCategory =
+                      item?.Category === category.name &&
+                      item?.user === user?.id;
+                    // console.log(
+                    //   `Item: ${item?.Service}, Category: ${item?.Category}, Matches: ${matchesCategory}`
+                    // );
+                    return matchesCategory;
+                  })
+                  .map((item) => (
+                    <div
+                      key={item.id}
+                      onClick={() => {
+                        setSelectedItem(item);
+                        setIsOpen(true);
+                      }}
+                      className="truncate flex group hover:border-[#1C1C1C] transition-all cursor-pointer items-center justify-between border border-[#D5D5D5] rounded-lg py-2 px-4"
+                    >
+                      <div className="capitalize">{item?.Service}</div>
+                      <AlertDialog>
+                        <AlertDialogTrigger>
+                          <Icon danger size={14} icon={<Trash />} />
+                        </AlertDialogTrigger>
+                        <AlertDialogContent>
+                          <AlertDialogHeader>
+                            <AlertDialogTitle>
+                              Are you absolutely sure?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription>
+                              This action cannot be undone. This will
+                              permanently delete your record.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel>Cancel</AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const collectionName =
+                                  item?.Type === "Card"
+                                    ? "Card"
+                                    : item?.Type === "ID"
+                                    ? "ID"
+                                    : "Login";
+                                deleteItem(item.id, collectionName);
+                              }}
+                            >
+                              Continue
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
                     </div>
-                ))}
-            </div>
-        ))}
-        </>
-        {/* <button onClick={() => console.log(idCards)}>test</button> */}
+                  ))}
+              </div>
+            ))}
         </div>
-        </div>
-        <CardDetails setIsOpen={setIsOpen} isOpen={isOpen} data={selectedItem} />
-        </>
-    )
+      </div>
+      <CardDetails setIsOpen={setIsOpen} isOpen={isOpen} data={selectedItem} />
+    </>
+  );
 }

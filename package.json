@@ -10,7 +10,11 @@
   },
   "dependencies": {
     "@clerk/nextjs": "^4.29.9",
+    "@radix-ui/react-alert-dialog": "^1.1.5",
+    "@radix-ui/react-slot": "^1.1.1",
     "bcryptjs": "^2.4.3",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "cryptojs": "^2.5.3",
     "firebase": "^10.7.1",
     "lucide-react": "^0.303.0",
@@ -18,6 +22,8 @@
     "react": "^18",
     "react-dom": "^18",
     "react-hot-toast": "^2.4.1",
+    "tailwind-merge": "^3.0.1",
+    "tailwindcss-animate": "^1.0.7",
     "zod": "^3.22.4"
   },
   "devDependencies": {
