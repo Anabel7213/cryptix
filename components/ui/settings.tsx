@@ -45,7 +45,7 @@ export default function SettingsModal({
     {
       name: "About Devs",
       icon: <FileCode2 />,
-      onClick: () => window.open("https://www.by-anabel.com/"),
+      onClick: () => window.open("https://www.by-anabel.com/about"),
     },
     {
       name: "Log Out",

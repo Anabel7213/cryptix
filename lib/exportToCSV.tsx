@@ -1,7 +1,13 @@
 import { handleDecryption } from "@/decrypt";
 import toast from "react-hot-toast";
 
-export const exportToCSV = async ({ allItems }: any) => {
+export const exportToCSV = async ({
+  allItems,
+  userId,
+}: {
+  allItems: any;
+  userId: string | undefined;
+}) => {
   const csvRows: string[] = [];
   const headers = [
     "Type",
@@ -27,7 +33,12 @@ export const exportToCSV = async ({ allItems }: any) => {
   ];
   csvRows.push(headers.join(","));
 
-  for (const item of allItems) {
+  // Filter items for the logged-in user
+  const userItems = allItems.filter(
+    (item: { user: string }) => item.user === userId
+  );
+
+  for (const item of userItems) {
     let values: string[] = [];
 
     if ("Username" in item) {

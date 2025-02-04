@@ -214,13 +214,16 @@ export default function Passwords({
   };
 
   useEffect(() => {
-    setAllItemsLength(allItems.length);
-    setAllItems(allItems);
-  }, [setAllItems, allItems, setAllItemsLength]);
+    if (user) {
+      const userItems = allItems.filter(item => item.user === user.id);
+      setAllItemsLength(userItems.length);
+      setAllItems(allItems);
+    }
+  }, [setAllItems, allItems, setAllItemsLength, user?.id]);
 
   return (
     <>
-      <div className="w-full flex flex-col md:justify-center lg:max-w-[1200px]">
+      <div className="w-full flex flex-col md:justify-center lg:min-w-[700px] lg:max-w-[1000px] xl:max-w-[1200px]">
         {!isLoading ? (
           <div className="flex flex-col gap-4 lg:flex-row lg:gap-8 w-full lg:overflow-x-scroll">
             {categories
@@ -230,9 +233,9 @@ export default function Passwords({
               )
               .map((category) => (
                 <div key={category.id} className="flex flex-col gap-2">
-                  <div className="flex shrink-0 min-w-[180px] items-center justify-between gap-4">
-                    <div className="flex items-center gap-4 justify-between w-full">
-                      <h1 className="capitalize font-medium px-2 py-1 mb-1 rounded-md bg-[#f6f6f6] lg:text-sm whitespace-nowrap">
+                  <div className="flex shrink-0 w-full lg:w-[180px] mb-1 items-center justify-between gap-4">
+                    <div className="flex items-center gap-8 justify-between w-full">
+                      <h1 className="capitalize truncate font-medium px-2 py-1 rounded-md bg-[#f6f6f6] lg:text-sm whitespace-nowrap">
                         {category.name}
                       </h1>
                       <span className="text-[#758393]">
@@ -307,7 +310,7 @@ export default function Passwords({
               ))}
           </div>
         ) : (
-          <div className="m-4 lg:m-24 w-full lg:w-[1200px] animate-pulse h-[300px] text-[#758393] flex items-center justify-center"></div>
+          <div className="p-6 w-full lg:w-[700px] animate-pulse h-[300px] text-[#758393] flex items-center justify-center"></div>
         )}
       </div>
       <CardDetails setIsOpen={setIsOpen} isOpen={isOpen} data={selectedItem} />

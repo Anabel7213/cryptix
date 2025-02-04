@@ -174,7 +174,7 @@ export default function Categories() {
                         onChange={(e) => setEditedText(e.target.value)}
                       />
                     ) : (
-                      <div className="capitalize">{category.name}</div>
+                      <div className="capitalize truncate">{category.name}</div>
                     )}
                     <div className="items-center flex">
                       {editedId === category.id ? (
